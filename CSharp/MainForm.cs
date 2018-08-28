@@ -152,8 +152,17 @@ namespace TwainCustomUIDemo
             // if TWAIN device manager is NOT available
             if (!_deviceManager.IsTwainAvailable)
             {
-                // try to use another TWAIN device manager
-                _deviceManager.IsTwain2Compatible = !twain2CompatibleCheckBox.Checked;
+                try
+                {
+                    // try to use another TWAIN device manager
+                    _deviceManager.IsTwain2Compatible = !twain2CompatibleCheckBox.Checked;
+                }
+                catch (Exception ex)
+                {
+                    // show dialog with error message
+                    MessageBox.Show(ex.Message, "TWAIN device manager", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
                 // if TWAIN device manager is NOT available
                 if (!_deviceManager.IsTwainAvailable)
                 {
@@ -162,14 +171,75 @@ namespace TwainCustomUIDemo
                 }
             }
 
-            // open the device manager
-            _deviceManager.Open();
+            // if 64-bit TWAIN2 device manager is used
+            if (IntPtr.Size == 8 && _deviceManager.IsTwain2Compatible)
+            {
+                if (!InitTwain2DeviceManagerMode())
+                    return false;
+            }
+
+            try
+            {
+                // open the device manager
+                _deviceManager.Open();
+            }
+            catch (Exception ex)
+            {
+                // show dialog with error message
+                MessageBox.Show(ex.Message, "TWAIN device manager", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
 
             // if no devices are found in the system
             if (_deviceManager.Devices.Count == 0)
             {
                 MessageBox.Show("No devices found.");
                 return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Initializes the device manager mode.
+        /// </summary>
+        private bool InitTwain2DeviceManagerMode()
+        {
+            // create a form that allows to view and edit mode of 64-bit TWAIN2 device manager
+            using (SelectDeviceManagerModeForm form = new SelectDeviceManagerModeForm())
+            {
+                // initialize form
+                form.StartPosition = FormStartPosition.CenterParent;
+                form.Owner = this;
+                form.Use32BitDevices = _deviceManager.Are32BitDevicesUsed;
+
+                // show dialog
+                if (form.ShowDialog() == DialogResult.OK)
+                {
+                    // if device manager mode is changed
+                    if (form.Use32BitDevices != _deviceManager.Are32BitDevicesUsed)
+                    {
+                        try
+                        {
+                            // if 32-bit devices must be used
+                            if (form.Use32BitDevices)
+                                _deviceManager.Use32BitDevices();
+                            else
+                                _deviceManager.Use64BitDevices();
+                        }
+                        catch (TwainDeviceManagerException ex)
+                        {
+                            // show dialog with error message
+                            MessageBox.Show(ex.Message, "TWAIN device manager", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                            return false;
+                        }
+                    }
+                }
+                else
+                {
+                    return false;
+                }
             }
 
             return true;
@@ -444,8 +514,17 @@ namespace TwainCustomUIDemo
             // close device and device manager
             CloseDeviceAndDeviceManager();
 
-            // change TWAIN 2.0 compatibility
-            _deviceManager.IsTwain2Compatible = twain2CompatibleCheckBox.Checked;
+            try
+            {
+                // change TWAIN 2.0 compatibility
+                _deviceManager.IsTwain2Compatible = twain2CompatibleCheckBox.Checked;
+            }
+            catch (Exception ex)
+            {
+                twain2CompatibleCheckBox.Checked ^= true;
+                // show dialog with error message
+                MessageBox.Show(ex.Message, "TWAIN device manager", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
 
             // init devices
             InitDevices();
@@ -600,8 +679,19 @@ namespace TwainCustomUIDemo
 
             // if device is closed
             if (_currentDevice.State == DeviceState.Closed)
-                // open the device
-                _currentDevice.Open();
+            {
+                try
+                {
+                    // open the device
+                    _currentDevice.Open();
+                }
+                catch (Exception ex)
+                {
+                    this.Cursor = Cursors.Default;
+                    MessageBox.Show(ex.Message);
+                    return;
+                }
+            }
 
             try
             {
@@ -706,9 +796,19 @@ namespace TwainCustomUIDemo
 
             // if device is closed
             if (_currentDevice.State == DeviceState.Closed)
-                // open the device
-                _currentDevice.Open();
-
+            {
+                try
+                {
+                    // open the device
+                    _currentDevice.Open();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    IsImageAcquiring = false;
+                    return;
+                }
+            }
 
             // set device capabilities
 
@@ -828,11 +928,12 @@ namespace TwainCustomUIDemo
             tabPage1.Location = new System.Drawing.Point(4, 22);
             tabPage1.Padding = new System.Windows.Forms.Padding(3);
             tabPage1.Size = new System.Drawing.Size(522, 318);
-            tabPage1.Text = string.Format("Image {0} [{1}x{2}, {3}, {4}]", _imageCount++,
+            tabPage1.Text = string.Format("Image {0} [{1}x{2}, {3}, {4}]", _imageCount,
                                             e.Image.ImageInfo.Width,
                                             e.Image.ImageInfo.Height,
                                             e.Image.ImageInfo.PixelType,
                                             e.Image.ImageInfo.Resolution);
+            _imageCount = _imageCount + 1;
 
             // create picture box for acquired image
             PictureBox pictureBox1 = new PictureBox();
@@ -942,7 +1043,7 @@ namespace TwainCustomUIDemo
             // if values are represented as array or enumeration
             else
             {
-                InitComboBox(xResComboBox, xResCapValue.GetAsFloatArray(), _currentDevice.Resolution.Horizontal);
+                InitComboBox(xResComboBox, xResCapValue.GetAsFloatArray(), _currentDevice.Resolution.XResolution);
 
                 xResComboBox.Visible = true;
             }
@@ -981,7 +1082,7 @@ namespace TwainCustomUIDemo
             // if values are represented as array or enumeration
             else
             {
-                InitComboBox(yResComboBox, yResCapValue.GetAsFloatArray(), _currentDevice.Resolution.Vertical);
+                InitComboBox(yResComboBox, yResCapValue.GetAsFloatArray(), _currentDevice.Resolution.YResolution);
 
                 yResComboBox.Visible = true;
             }
@@ -1357,8 +1458,8 @@ namespace TwainCustomUIDemo
                     float newXRes = (float)xResComboBox.SelectedItem;
                     float newYRes = (float)yResComboBox.SelectedItem;
                     if (_currentDevice.UnitOfMeasure != _unitOfMeasure ||
-                        _currentDevice.Resolution.Horizontal != newXRes ||
-                        _currentDevice.Resolution.Vertical != newYRes)
+                        _currentDevice.Resolution.XResolution != newXRes ||
+                        _currentDevice.Resolution.YResolution != newYRes)
                         _currentDevice.Resolution = new Resolution(newXRes, newYRes, _unitOfMeasure);
                 }
                 catch (TwainDeviceCapabilityException)
@@ -1372,8 +1473,8 @@ namespace TwainCustomUIDemo
                     float newXRes = (float)xResTrackBar.Value;
                     float newYRes = (float)yResTrackBar.Value;
                     if (_currentDevice.UnitOfMeasure != _unitOfMeasure ||
-                        _currentDevice.Resolution.Horizontal != newXRes ||
-                        _currentDevice.Resolution.Vertical != newYRes)
+                        _currentDevice.Resolution.XResolution != newXRes ||
+                        _currentDevice.Resolution.YResolution != newYRes)
                         _currentDevice.Resolution = new Resolution(newXRes, newYRes, _unitOfMeasure);
                 }
                 catch (TwainDeviceCapabilityException)
