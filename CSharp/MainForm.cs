@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
 using Vintasoft.Twain;
@@ -79,7 +79,7 @@ namespace TwainCustomUIDemo
 
             this.Text = string.Format("VintaSoft TWAIN Custom UI Demo v{0}", TwainGlobalSettings.ProductVersion);
 
-            _deviceManager = new DeviceManager(this);
+            _deviceManager = new DeviceManager(this, this.Handle);
         }
 
         #endregion
@@ -135,8 +135,35 @@ namespace TwainCustomUIDemo
         {
             // change the application status and update UI
             IsDeviceChanging = true;
-            // init devices
-            InitDevices();
+            try
+            {
+                // init devices
+                InitDevices();
+            }
+            finally
+            {
+                // change the application status and update UI
+                IsDeviceChanging = false;
+            }
+        }
+
+        /// <summary>
+        /// Returns the message of exception and inner exceptions.
+        /// </summary>
+        private string GetFullExceptionMessage(Exception ex)
+        {
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.AppendLine(ex.Message);
+
+            Exception innerException = ex.InnerException;
+            while (innerException != null)
+            {
+                if (ex.Message != innerException.Message)
+                    sb.AppendLine(string.Format("Inner exception: {0}", innerException.Message));
+                innerException = innerException.InnerException;
+            }
+
+            return sb.ToString();
         }
 
 
@@ -149,27 +176,6 @@ namespace TwainCustomUIDemo
         {
             // try to find the device manager specified by user
             _deviceManager.IsTwain2Compatible = twain2CompatibleCheckBox.Checked;
-            // if TWAIN device manager is NOT available
-            if (!_deviceManager.IsTwainAvailable)
-            {
-                try
-                {
-                    // try to use another TWAIN device manager
-                    _deviceManager.IsTwain2Compatible = !twain2CompatibleCheckBox.Checked;
-                }
-                catch (Exception ex)
-                {
-                    // show dialog with error message
-                    MessageBox.Show(ex.Message, "TWAIN device manager", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return false;
-                }
-                // if TWAIN device manager is NOT available
-                if (!_deviceManager.IsTwainAvailable)
-                {
-                    MessageBox.Show("TWAIN device manager is not found.");
-                    return false;
-                }
-            }
 
             // if 64-bit TWAIN2 device manager is used
             if (IntPtr.Size == 8 && _deviceManager.IsTwain2Compatible)
@@ -186,7 +192,7 @@ namespace TwainCustomUIDemo
             catch (Exception ex)
             {
                 // show dialog with error message
-                MessageBox.Show(ex.Message, "TWAIN device manager", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(GetFullExceptionMessage(ex), "TWAIN device manager", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
 
@@ -230,7 +236,7 @@ namespace TwainCustomUIDemo
                         catch (TwainDeviceManagerException ex)
                         {
                             // show dialog with error message
-                            MessageBox.Show(ex.Message, "TWAIN device manager", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show(GetFullExceptionMessage(ex), "TWAIN device manager", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                             return false;
                         }
@@ -278,9 +284,6 @@ namespace TwainCustomUIDemo
                 // init current device settings
                 InitDeviceSettings();
             }
-
-            // change the application status and update UI
-            IsDeviceChanging = false;
         }
 
         /// <summary>
@@ -299,7 +302,7 @@ namespace TwainCustomUIDemo
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    MessageBox.Show(GetFullExceptionMessage(ex));
                     return;
                 }
             }
@@ -518,16 +521,20 @@ namespace TwainCustomUIDemo
             {
                 // change TWAIN 2.0 compatibility
                 _deviceManager.IsTwain2Compatible = twain2CompatibleCheckBox.Checked;
+
+                // init devices
+                InitDevices();
             }
             catch (Exception ex)
             {
-                twain2CompatibleCheckBox.Checked ^= true;
                 // show dialog with error message
-                MessageBox.Show(ex.Message, "TWAIN device manager", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(GetFullExceptionMessage(ex), "TWAIN device manager", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
-            // init devices
-            InitDevices();
+            finally
+            {
+                // change the application status and update UI
+                IsDeviceChanging = false;
+            }
         }
 
         /// <summary>
@@ -566,11 +573,11 @@ namespace TwainCustomUIDemo
             }
             catch (TwainDeviceException ex)
             {
-                ShowErrorMessage(ex.Message, "Device error");
+                ShowErrorMessage(GetFullExceptionMessage(ex), "Device error");
             }
             catch (TwainInvalidStateException ex)
             {
-                ShowErrorMessage(ex.Message, "Device invalid state");
+                ShowErrorMessage(GetFullExceptionMessage(ex), "Device invalid state");
             }
         }
 
@@ -688,7 +695,7 @@ namespace TwainCustomUIDemo
                 catch (Exception ex)
                 {
                     this.Cursor = Cursors.Default;
-                    MessageBox.Show(ex.Message);
+                    MessageBox.Show(GetFullExceptionMessage(ex));
                     return;
                 }
             }
@@ -700,7 +707,7 @@ namespace TwainCustomUIDemo
             }
             catch (TwainException ex)
             {
-                ShowErrorMessage(ex.Message, "Error");
+                ShowErrorMessage(GetFullExceptionMessage(ex), "Error");
             }
 
             this.Cursor = Cursors.Default;
@@ -804,7 +811,7 @@ namespace TwainCustomUIDemo
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    MessageBox.Show(GetFullExceptionMessage(ex));
                     IsImageAcquiring = false;
                     return;
                 }
@@ -866,7 +873,7 @@ namespace TwainCustomUIDemo
             }
             catch (Exception ex)
             {
-                MessageBox.Show(string.Format("Error: {0}", ex.Message));
+                MessageBox.Show(string.Format("Error: {0}", GetFullExceptionMessage(ex)));
                 // change the application status and update UI
                 IsImageAcquiring = false;
             }
@@ -1543,15 +1550,15 @@ namespace TwainCustomUIDemo
                 }
                 catch (FormatException ex)
                 {
-                    MessageBox.Show(ex.Message, "Set Image Layout Error");
+                    MessageBox.Show(GetFullExceptionMessage(ex), "Set Image Layout Error");
                 }
                 catch (TwainDeviceException ex)
                 {
-                    MessageBox.Show(ex.Message, "Set Image Layout Error");
+                    MessageBox.Show(GetFullExceptionMessage(ex), "Set Image Layout Error");
                 }
                 catch (TwainDeviceCapabilityException ex)
                 {
-                    MessageBox.Show(ex.Message, "Set Image Layout Error");
+                    MessageBox.Show(GetFullExceptionMessage(ex), "Set Image Layout Error");
                 }
             }
         }
@@ -1750,7 +1757,7 @@ namespace TwainCustomUIDemo
         }
 
         #endregion
-
+        
         #endregion
 
     }

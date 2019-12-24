@@ -1,4 +1,4 @@
-namespace TwainCustomUIDemo
+﻿namespace TwainCustomUIDemo
 {
     partial class MainForm
     {
