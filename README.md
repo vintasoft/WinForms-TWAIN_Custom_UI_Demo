@@ -1,4 +1,4 @@
-<h1>VintaSoft TWAIN Custom UI Demo</h1>
+<h1>VintaSoft WinForms TWAIN Custom UI Demo</h1>
 
 Demo application shows how to acquire images from TWAIN device using customized (user-defined) user interface. Demo uses functionality of <a href="http://www.vintasoft.com/vstwain-dotnet-index.html">VintaSoft Twain .NET SDK</a>. Source codes for C# and VB.NET are available.
 
