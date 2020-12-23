@@ -5,14 +5,13 @@ namespace TwainCustomUIDemo
 {
     static class Program
     {
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
         static void Main()
         {
-            VintasoftTwain.VintasoftTwainLicense.Register();
-
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             Application.EnableVisualStyles();
@@ -33,20 +32,11 @@ namespace TwainCustomUIDemo
                 // show information about licensing exception
                 MessageBox.Show(string.Format("{0}: {1}", licenseException.GetType().Name, licenseException.Message), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-                string[] dirs = new string[] { ".", "..", @"..\..\", @"..\..\..\", @"..\..\..\..\..\", @"..\..\..\..\..\..\..\" };
-                // for each directory
-                for (int i = 0; i < dirs.Length; i++)
-                {
-                    string filename = System.IO.Path.Combine(dirs[i], "VSTwainNetEvaluationLicenseManager.exe");
-                    // if VintaSoft Evaluation License Manager exists in directory
-                    if (System.IO.File.Exists(filename))
-                    {
-                        // start Vintasoft Evaluation License Manager for getting the evaluation license
-                        System.Diagnostics.Process process = new System.Diagnostics.Process();
-                        process.StartInfo.FileName = filename;
-                        process.Start();
-                    }
-                }
+                // open article with information about usage of evaluation license
+                System.Diagnostics.Process process = new System.Diagnostics.Process();
+                process.StartInfo.FileName = "https://www.vintasoft.com/docs/vstwain-dotnet/Licensing-Twain-Evaluation.html";
+                process.StartInfo.UseShellExecute = true;
+                process.Start();
             }
         }
 
@@ -66,5 +56,6 @@ namespace TwainCustomUIDemo
                 return GetLicenseException(ex.InnerException);
             return null;
         }
+
     }
 }
