@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using Vintasoft.Twain;
+using Vintasoft.WinTwain;
 
 namespace TwainCustomUIDemo
 {
@@ -946,6 +946,7 @@ namespace TwainCustomUIDemo
             PictureBox pictureBox1 = new PictureBox();
             // set the picture box size
             pictureBox1.Size = tabPage1.Size;
+
             // set a bitmap in the picture box
             pictureBox1.Image = e.Image.GetAsBitmap(true);
             // set the picture box size mode
@@ -1757,7 +1758,7 @@ namespace TwainCustomUIDemo
         }
 
         #endregion
-        
+
         #endregion
 
     }
