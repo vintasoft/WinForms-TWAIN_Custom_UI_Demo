@@ -3,7 +3,7 @@
 This WinForms project uses <a href="https://www.vintasoft.com/vstwain-dotnet-index.html">VintaSoft TWAIN .NET SDK</a> and demonstrates how to acquire images from TWAIN device using customized (user-defined) user interface.
 
 ## Screenshot
-<img src="vintasoft-twain-custom-ui-demo.png" alt="VintaSoft TWAIN Custom UI Demo">
+<img src="vintasoft-twain-custom-ui-demo.png" title="VintaSoft TWAIN Custom UI Demo">
 
 ## Usage
 1. Get the 30 day free evaluation license for <a href="https://www.vintasoft.com/vstwain-dotnet-index.html" target="_blank">VintaSoft TWAIN .NET SDK</a> as described here: <a href="https://www.vintasoft.com/docs/vstwain-dotnet/Licensing-Twain-Evaluation.html" target="_blank">https://www.vintasoft.com/docs/vstwain-dotnet/Licensing-Twain-Evaluation.html</a>
