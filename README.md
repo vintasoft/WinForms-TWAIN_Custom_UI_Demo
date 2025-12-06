@@ -1,6 +1,6 @@
 # VintaSoft WinForms TWAIN Custom UI Demo
 
-This WinForms project uses <a href="https://www.vintasoft.com/vstwain-dotnet-index.html">VintaSoft TWAIN .NET SDK</a> and demonstrates how to acquire images from TWAIN device using customized (user-defined) user interface.
+This WinForms project uses <a href="https://www.vintasoft.com/vstwain-dotnet-index.html">VintaSoft TWAIN .NET SDK</a> and demonstrates how to acquire images from TWAIN image scanner using customized (user-defined) user interface.
 
 ## Screenshot
 <img src="vintasoft-twain-custom-ui-demo.png" title="VintaSoft TWAIN Custom UI Demo">
